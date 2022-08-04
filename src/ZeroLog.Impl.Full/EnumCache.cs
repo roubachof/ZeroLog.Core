@@ -4,9 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using InlineIL;
 using ZeroLog.Support;
-using static InlineIL.IL.Emit;
 
 namespace ZeroLog;
 
@@ -46,27 +44,27 @@ internal static class EnumCache
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressMessage("ReSharper", "UnusedParameter.Global")]
     [SuppressMessage("ReSharper", "EntityNameCapturedOnly.Global")]
-    public static ulong ToUInt64<T>(T value)
-    {
-        Ldarg(nameof(value));
-        Conv_I8();
-        return IL.Return<ulong>();
-    }
+    //public static ulong ToUInt64<T>(T value)  => We don't want code injection at runtime to be compatible with iOS or Unity
+    //{
+    //    Ldarg(nameof(value));
+    //    Conv_I8();
+    //    return IL.Return<ulong>();
+    //}
 
-    internal static ulong ToUInt64Slow(Enum value)
+    public static ulong ToUInt64(Enum value)
     {
         // Only used when registering enums.
 
         return Type.GetTypeCode(Enum.GetUnderlyingType(value.GetType())) switch
         {
-            TypeCode.SByte  => ToUInt64((sbyte)(object)value),
-            TypeCode.Byte   => ToUInt64((byte)(object)value),
-            TypeCode.Int16  => ToUInt64((short)(object)value),
-            TypeCode.UInt16 => ToUInt64((ushort)(object)value),
-            TypeCode.Int32  => ToUInt64((int)(object)value),
-            TypeCode.UInt32 => ToUInt64((uint)(object)value),
-            TypeCode.Int64  => ToUInt64((long)(object)value),
-            TypeCode.UInt64 => ToUInt64((ulong)(object)value),
+            TypeCode.SByte  => Convert.ToUInt64((sbyte)(object)value),
+            TypeCode.Byte   => Convert.ToUInt64((byte)(object)value),
+            TypeCode.Int16  => Convert.ToUInt64((short)(object)value),
+            TypeCode.UInt16 => Convert.ToUInt64((ushort)(object)value),
+            TypeCode.Int32  => Convert.ToUInt64((int)(object)value),
+            TypeCode.UInt32 => Convert.ToUInt64((uint)(object)value),
+            TypeCode.Int64  => Convert.ToUInt64((long)(object)value),
+            TypeCode.UInt64 => Convert.ToUInt64((ulong)(object)value),
             _               => throw new InvalidOperationException($"Invalid enum: {value.GetType()}")
         };
     }
@@ -75,27 +73,27 @@ internal static class EnumCache
     {
         return TypeUtilSlow<T>.UnderlyingTypeCode switch
         {
-            TypeCode.SByte  => ToUInt64Nullable<T, sbyte>(value),
-            TypeCode.Byte   => ToUInt64Nullable<T, byte>(value),
-            TypeCode.Int16  => ToUInt64Nullable<T, short>(value),
-            TypeCode.UInt16 => ToUInt64Nullable<T, ushort>(value),
-            TypeCode.Int32  => ToUInt64Nullable<T, int>(value),
-            TypeCode.UInt32 => ToUInt64Nullable<T, uint>(value),
-            TypeCode.Int64  => ToUInt64Nullable<T, long>(value),
-            TypeCode.UInt64 => ToUInt64Nullable<T, ulong>(value),
+            TypeCode.SByte  => value == null ? null : Convert.ToUInt64((sbyte)(object)value),
+            TypeCode.Byte   => value == null ? null : Convert.ToUInt64((byte)(object)value),
+            TypeCode.Int16  => value == null ? null : Convert.ToUInt64((short)(object)value),
+            TypeCode.UInt16 => value == null ? null : Convert.ToUInt64((ushort)(object)value),
+            TypeCode.Int32  => value == null ? null : Convert.ToUInt64((int)(object)value),
+            TypeCode.UInt32 => value == null ? null : Convert.ToUInt64((uint)(object)value),
+            TypeCode.Int64  => value == null ? null : Convert.ToUInt64((long)(object)value),
+            TypeCode.UInt64 => value == null ? null : Convert.ToUInt64((ulong)(object)value),
             _               => null
         };
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ulong? ToUInt64Nullable<T, TBase>(T value) // T = Nullable<SomeEnum>
-        where TBase : struct
-    {
-        ref var nullable = ref Unsafe.As<T, TBase?>(ref value);
-        return nullable != null
-            ? ToUInt64(nullable.GetValueOrDefault())
-            : null;
-    }
+    //private static ulong? ToUInt64Nullable<T, TBase>(T value) // T = Nullable<SomeEnum>
+    //    where TBase : struct
+    //{
+    //    ref var nullable = ref Unsafe.As<T, TBase?>(ref value);
+    //    return nullable != null
+    //        ? ToUInt64(nullable.GetValueOrDefault())
+    //        : null;
+    //}
 
     [SuppressMessage("ReSharper", "ConvertClosureToMethodGroup")]
     public static bool IsEnumSigned(IntPtr typeHandle)
@@ -195,7 +193,7 @@ internal static class EnumCache
 
         public EnumItem(Enum item)
         {
-            Value = ToUInt64Slow(item);
+            Value = ToUInt64(item);
             Name = item.ToString();
         }
     }
